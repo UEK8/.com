@@ -391,7 +391,7 @@
         if (s) Object.assign(state.settings, s);
         const p = JSON.parse(localStorage.getItem(STORAGE_PROJECTS));
         if (p) state.projects = p;
-        const cu = JSON.parse(localStorage.getItem(STORAGE_CURRENT_USER));
+        
         if (cu) state.currentUser = cu;
       } catch (e) {
         console.error('Error loading state:', e);
@@ -432,7 +432,6 @@
       $('#btn-go-signup').addEventListener('click', () => { switchView('signup'); });
       $('#btn-reset-settings').addEventListener('click', resetSettings);
       $('#btn-reset-users').addEventListener('click', resetUsers);
-
       // Auth
       $('#btn-logout').addEventListener('click', logout);
       $('#to-login').addEventListener('click', () => {
@@ -652,44 +651,67 @@
     }
 
     function resetUsers() {
-      if (confirm('سيتم تسجيل الخروج من الحساب الحالي!')) {
-        logout();
-      }
-    }
+  if (confirm('سيتم مسح كل المستخدمين وتسجيل الخروج!')) {
+    state.users = []; 
+    state.currentUser = null;
+    saveUsers(); 
+    saveCurrentUser();
+    refreshAuthUI(); 
+    applySettingsToDOM();
+    alert('تمت إعادة ضبط المستخدمين.');
+  }
+}
 
     // Auth Functions
     async function register() {
-      const name = $('#reg-name').value.trim();
-      const email = $('#reg-email').value.trim().toLowerCase();
-      const pass = $('#reg-pass').value.trim();
-      
-      if (!name || !email || !pass) { 
-        alert('أدخل كل البيانات'); 
-        return; 
-      }
-      
-      try {
-        const { user } = await auth.createUserWithEmailAndPassword(email, pass);
-        await db.collection('users').doc(user.uid).set({
-          name,
-          email,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        $('#reg-name').value = '';
-        $('#reg-email').value = '';
-        $('#reg-pass').value = '';
-        
-        alert('تم إنشاء الحساب بنجاح ✅');
-        $('#to-login').click();
-      } catch (error) {
-        console.error('Registration error:', error);
-        alert(error.message.includes('email-already-in-use') 
-          ? 'هذا البريد مستخدم بالفعل' 
-          : 'حدث خطأ أثناء التسجيل: ' + error.message);
-      }
+  const name = $('#reg-name').value.trim();
+  const email = $('#reg-email').value.trim().toLowerCase();
+  const pass = $('#reg-pass').value.trim();
+  
+  if (!name || !email || !pass) { 
+    alert('أدخل كل البيانات'); 
+    return; 
+  }
+  
+  try {
+    const btn = $('#btn-register');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    const { user } = await auth.createUserWithEmailAndPassword(email, pass);
+    await db.collection('users').doc(user.uid).set({
+      name,
+      email,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    $('#reg-name').value = '';
+    $('#reg-email').value = '';
+    $('#reg-pass').value = '';
+    
+    alert('تم إنشاء الحساب بنجاح ✅');
+    $('#signup-card').style.display = 'none';
+    $('#login-card').style.display = 'block';
+    $('#log-email').value = email;
+    $('#log-pass').focus();
+    
+  } catch (error) {
+    console.error('Registration error:', error);
+    let errorMsg = 'حدث خطأ أثناء التسجيل';
+    if (error.message.includes('email-already-in-use')) {
+      errorMsg = 'هذا البريد مستخدم بالفعل';
+    } else if (error.message.includes('weak-password')) {
+      errorMsg = 'كلمة المرور ضعيفة (يجب أن تكون 6 أحرف على الأقل)';
+    } else if (error.message.includes('invalid-email')) {
+      errorMsg = 'بريد إلكتروني غير صالح';
     }
-
+    alert(errorMsg);
+  } finally {
+    const btn = $('#btn-register');
+    btn.disabled = false;
+    btn.innerHTML = 'إنشاء حساب';
+  }
+}
     async function login() {
       const email = $('#log-email').value.trim().toLowerCase();
       const pass = $('#log-pass').value.trim();
