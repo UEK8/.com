@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RDR YO</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    :root{
+      --primary:#2563eb;
+      --secondary:#f0f4ff;
+      --background:#fafafa;
+      --text:#222;
+      --bot-bubble:#f1f3f4;
+      --radius:12px;
+      --shadow:0 6px 18px rgba(0,0,0,.08);
+      --fs:16px;
+    }
+    body.dark{
+      --primary:#3b82f6;
+      --secondary:#1e293b;
+      --background:#0f172a;
+      --text:#e2e8f0;
+      --bot-bubble:#1e293b;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      font-family:'Tajawal',sans-serif;
+      background:var(--background);
+      color:var(--text);
+      display:flex;flex-direction:column;
+      transition:background .3s,color .3s;
+      font-size:var(--fs);
+    }
+
+    /* Top bar */
+    .top-bar{
+      position:fixed;top:0;left:0;right:0;
+      background:#fff;border-bottom:1px solid #eee;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:10px 14px;z-index:100;
+      transition:background .3s,border-color .3s;
+    }
+    body.dark .top-bar{background:#1e293b;border-color:#334155}
+    .brand{display:flex;align-items:center;gap:10px;color:var(--primary);font-weight:700}
+    .logo{width:50px;height:50px;border-radius:8px}
+    .user-pill{display:flex;align-items:center;gap:8px;background:var(--secondary);color:var(--primary);padding:6px 10px;border-radius:999px}
+
+    /* Side nav */
+    nav{
+      position:fixed;top:0;right:-260px;height:100%;width:240px;
+      background:#fff;border-left:1px solid #eee;padding:80px 14px 18px;
+      transition:right .35s, background .3s, border-color .3s; z-index:200;
+    }
+    body.dark nav{background:#1e293b;border-color:#334155}
+    nav.active{right:0}
+    nav a{
+      display:flex;align-items:center;gap:8px;
+      padding:10px 12px;border-radius:10px;margin:6px 0;
+      color:#333;text-decoration:none;font-weight:500;transition:.25s;
+    }
+    body.dark nav a{color:#e2e8f0}
+    nav a:hover,nav a.active{background:var(--secondary);color:var(--primary)}
+    .menu-btn,.theme-btn{
+      background:transparent;border:none;cursor:pointer;font-size:1.2rem;color:inherit
+    }
+
+    /* Main / Views */
+    .main{margin-top:60px;display:flex;min-height:calc(100vh - 60px)}
+    .view{display:none;flex:1}
+    .view.active{display:block}
+    .container{padding:16px}
+    .card{
+      background:#fff;border:1px solid #eee;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);
+      transition:background .3s,border-color .3s
+    }
+    body.dark .card{background:#0b1222;border-color:#1b2740}
+    .section-title{font-weight:700;margin-bottom:12px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row>*{flex:1 1 220px}
+
+    /* Inputs & Buttons */
+    input[type="text"],input[type="email"],input[type="password"],textarea,select{
+      width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:10px;background:#fff;color:#111;
+      transition:background .3s,border-color .3s,color .3s
+    }
+    body.dark input,body.dark textarea,body.dark select{background:#0b1222;border-color:#1b2740;color:#e2e8f0}
+    textarea{min-height:90px;resize:vertical}
+    .btn{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:10px 12px;cursor:pointer}
+    .btn.secondary{background:#e5e7eb;color:#111}
+    .btn.ghost{background:transparent;border:1px solid #e5e7eb;color:inherit}
+    body.dark .btn.secondary{background:#334155;color:#e2e8f0}
+    .btn.danger{background:#ef4444}
+    .muted{opacity:.75}
+
+    /* Chat */
+    .chat-container{height:calc(100vh - 60px - 64px);padding:15px;overflow-y:auto}
+    .message{display:flex;margin:10px 0;align-items:flex-end}
+    .message.user{justify-content:flex-start}
+    .message.bot{justify-content:flex-end}
+    .bubble{
+      padding:10px 14px;border-radius:12px;max-width:75%;
+      font-size:.95rem;line-height:1.5;transition:background .3s,color .3s;
+      box-shadow:var(--shadow)
+    }
+    .message.user .bubble{background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+    .message.bot .bubble{background:var(--bot-bubble);color:var(--text);border-bottom-left-radius:4px}
+    .typing{display:flex;gap:4px;align-items:center;padding:10px 14px;background:var(--bot-bubble);border-radius:12px;box-shadow:var(--shadow)}
+    .dot{width:6px;height:6px;border-radius:50%;background:var(--text);animation:blink 1.4s infinite both}
+    .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+    @keyframes blink{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+
+    .bottom-bar{
+      position:fixed;bottom:0;left:0;right:0;
+      background:#fff;border-top:1px solid #eee;display:flex;gap:10px;padding:10px;
+      transition:background .3s,border-color .3s
+    }
+    body.dark .bottom-bar{background:#1e293b;border-color:#334155}
+    .input-wrap{flex:1;background:#f1f3f4;border-radius:12px;display:flex;align-items:center;padding:0 10px}
+    body.dark .input-wrap{background:#334155}
+    .bottom-bar input{flex:1;background:transparent;border:none;padding:10px;color:inherit;font-family:'Tajawal',sans-serif}
+    .bottom-bar input:focus{outline:none}
+
+    /* Projects */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+    .project-card .tag{display:inline-block;background:var(--secondary);color:var(--primary);padding:2px 8px;border-radius:999px;margin:2px 4px 0 0;font-size:.8rem}
+
+    /* Settings */
+    .toggle{display:flex;align-items:center;gap:8px}
+    .color-dot{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.1);cursor:pointer}
+    .row.cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+
+    .space{height:8px}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="brand">
+      <img class="logo" src="https://i.supaimg.com/08305e3d-4e47-4df2-841c-eb61662481ec.jpg" alt="logo"/>
+      <span id="brand-text"></span>
+    </div>
+    <div class="user-pill" id="user-pill" style="display:none">
+      <i class="fas fa-user"></i> <span id="user-name-pill"></span>
+    </div>
+    <div>
+      <button class="theme-btn" id="theme-btn" title="الوضع الداكن"><i class="fas fa-moon"></i></button>
+      <button class="menu-btn" id="menu-btn" title="القائمة"><i class="fas fa-bars"></i></button>
+    </div>
+  </div>
+
+  <!-- Side Nav -->
+  <nav id="sidenav">
+    <a href="#chat" data-view="chat" class="active"><i class="fas fa-comments"></i> المحادثة</a>
+    <a href="#projects" data-view="projects"><i class="fas fa-folder-plus"></i> مشروع جديد</a>
+    <a href="#settings" data-view="settings"><i class="fas fa-cog"></i> الإعدادات</a>
+    <a href="#signup" data-view="signup"><i class="fas fa-user"></i> Sign-up</a>
+    <li style="margin-top:20px; font-size:12px; text-align:center; opacity:0.6;">
+  Developer: Mostapha Hachmi</li>
+</ul>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Chat View -->
+    <section id="view-chat" class="view active">
+      <div class="chat-container" id="chat-content">
+        <div class="message user"><div class="bubble">مرحباً 👋</div></div>
+        <div class="message bot"><div class="bubble">أهلاً بك! كيف أقدر أساعدك؟</div></div>
+      </div>
+      <form class="bottom-bar" id="chat-form">
+        <div class="input-wrap">
+          <input type="text" id="user-input" placeholder="اكتب رسالتك هنا..." autocomplete="off">
+        </div>
+        <button type="submit" class="btn"><i class="fas fa-paper-plane"></i></button>
+      </form>
+    </section>
+
+    <!-- Projects View -->
+    <section id="view-projects" class="view">
+      <div class="container">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-folder-plus"></i> إنشاء مشروع</div>
+          <div class="row">
+            <div>
+              <label>اسم المشروع</label>
+              <input type="text" id="proj-name" placeholder="مثال: مساعد محادثة للمتجر">
+            </div>
+            <div>
+              <label>وسوم (افصلها بفواصل)</label>
+              <input type="text" id="proj-tags" placeholder="ذكاء اصطناعي, متجر, دعم">
+            </div>
+          </div>
+          <div class="space"></div>
+          <div>
+            <label>وصف المشروع</label>
+            <textarea id="proj-desc" placeholder="صف فكرتك أو الهدف من المشروع"></textarea>
+          </div>
+          <div class="space"></div>
+          <div class="row">
+            <button class="btn" id="btn-create">إنشاء</button>
+            <button class="btn secondary" id="btn-clear-form" type="button">مسح الحقول</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><i class="fas fa-box"></i> مشاريعي</div>
+          <div class="space"></div>
+          <div id="projects-list" class="grid"></div>
+          <div class="row">
+            <button class="btn danger" id="btn-clear-all" type="button"><i class="fas fa-trash"></i> حذف كل المشاريع</button>
+            <button class="btn ghost" id="btn-new-project" type="button"><i class="fas fa-plus"></i> مشروع جديد</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings View -->
+    <section id="view-settings" class="view">
+      <div class="container">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-sliders"></i> المظهر</div>
+          <div class="row">
+            <div class="toggle">
+              <input type="checkbox" id="set-dark"/>
+              <label for="set-dark">تفعيل الوضع الداكن</label>
+            </div>
+          </div>
+          <div class="space"></div>
+          <label>اللون الأساسي</label>
+          <div class="row cols-3">
+            <div class="color-dot" data-color="#2563eb" style="background:#2563eb"></div>
+            <div class="color-dot" data-color="#22c55e" style="background:#22c55e"></div>
+            <div class="color-dot" data-color="#ef4444" style="background:#ef4444"></div>
+            <div class="color-dot" data-color="#a855f7" style="background:#a855f7"></div>
+            <div class="color-dot" data-color="#f59e0b" style="background:#f59e0b"></div>
+            <div class="color-dot" data-color="#06b6d4" style="background:#06b6d4"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><i class="fas fa-text-height"></i> الخط</div>
+          <div class="row">
+            <div>
+              <label>حجم الأساس</label>
+              <select id="set-font">
+                <option value="14px">صغير</option>
+                <option value="16px" selected>عادي</option>
+                <option value="18px">كبير</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><i class="fas fa-language"></i> اللغة</div>
+          <div class="row">
+            <div>
+              <label>الواجهة</label>
+              <select id="set-lang">
+                <option value="ar" selected>العربية</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><i class="fas fa-user-shield"></i> الحساب</div>
+          <div id="account-info" class="muted">لا يوجد مستخدم مسجّل دخول</div>
+          <div class="space"></div>
+          <div class="row">
+            <button class="btn secondary" id="btn-go-signup" type="button"><i class="fas fa-user-plus"></i> إلى صفحة Sign-up</button>
+            <button class="btn danger hidden" id="btn-logout" type="button"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
+            <footer style="text-align:center;padding:10px;font-size:12px;opacity:0.7;">
+  Developer: Mostapha Hachmi
+</footer>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><i class="fas fa-database"></i> البيانات</div>
+          <div class="row">
+            <button class="btn danger" id="btn-reset-settings" type="button"><i class="fas fa-trash-restore"></i> مسح الإعدادات</button>
+            <button class="btn danger" id="btn-reset-users" type="button"><i class="fas fa-user-times"></i> مسح المستخدمين</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Signup/Login View -->
+    <section id="view-signup" class="view">
+      <div class="container">
+        <div class="card" id="signup-card">
+          <div class="section-title">📝 إنشاء حساب</div>
+          <input type="text" id="reg-name" placeholder="الاسم الكامل"><br><br>
+          <input type="email" id="reg-email" placeholder="البريد الإلكتروني"><br><br>
+          <input type="password" id="reg-pass" placeholder="كلمة المرور"><br><br>
+          <button class="btn" id="btn-register">إنشاء حساب</button>
+          <div class="link" id="to-login" style="margin-top:10px;color:var(--primary);cursor:pointer">لدي حساب؟ تسجيل دخول</div>
+        </div>
+        <div class="card" id="login-card" style="display:none">
+          <div class="section-title">🔑 تسجيل الدخول</div>
+          <input type="email" id="log-email" placeholder="البريد الإلكتروني"><br><br>
+          <input type="password" id="log-pass" placeholder="كلمة المرور"><br><br>
+          <button class="btn" id="btn-login">دخول</button>
+          <div class="link" id="to-register" style="margin-top:10px;color:var(--primary);cursor:pointer">لا أملك حساب؟ إنشاء حساب</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAQFa9Xt-WSD3tKsksEyyAlDNBcwORZLYc",
+      authDomain: "mostafa-82878.firebaseapp.com",
+      projectId: "mostafa-82878",
+      storageBucket: "mostafa-82878.appspot.com",
+      messagingSenderId: "269958161580",
+      appId: "1:269958161580:web:b846d49578fb2068e6eb09",
+      measurementId: "G-VPEVY74FNF"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM Helpers
+    const $ = s => document.querySelector(s);
+    const $$ = s => document.querySelectorAll(s);
+    const nav = $('#sidenav');
+    const body = document.body;
+
+    // API Configuration
+    const API_TOKEN = "v1-Z0FBQUFBQm5IZkJDMlNyYUVUTjIyZVN3UWFNX3BFTU85SWpCM2NUMUk3T2dxejhLSzBhNWNMMXNzZlp3c09BSTR6YW1Sc1BmdGNTVk1GY0liT1RoWDZZX1lNZlZ0Z1dqd3c9PQ==";
+    const API_URL = `https://backend.buildpicoapps.com/aero/run/llm-api?pk=${API_TOKEN}`;
+
+    // Storage keys
+    const STORAGE_SETTINGS = 'chatSettings:v1';
+    const STORAGE_PROJECTS = 'projects:v1';
+    const STORAGE_CURRENT_USER = 'currentUser:v1';
+
+    // Global state
+    const state = {
+      settings: { dark: false, primary: '#2563eb', lang: 'ar', fontSize: '16px' },
+      projects: [],
+      currentUser: null
+    };
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      setupEventListeners();
+      
+      // Listen for auth state changes
+      auth.onAuthStateChanged(async (user) => {
+        if (user) {
+          const userDoc = await db.collection('users').doc(user.uid).get();
+          if (userDoc.exists) {
+            state.currentUser = {
+              uid: user.uid,
+              name: userDoc.data().name,
+              email: user.email
+            };
+            saveCurrentUser();
+            refreshAuthUI();
+          }
+        } else {
+          state.currentUser = null;
+          saveCurrentUser();
+          refreshAuthUI();
+        }
+      });
+    });
+
+    function loadState() {
+      try {
+        const s = JSON.parse(localStorage.getItem(STORAGE_SETTINGS));
+        if (s) Object.assign(state.settings, s);
+        const p = JSON.parse(localStorage.getItem(STORAGE_PROJECTS));
+        if (p) state.projects = p;
+        const cu = JSON.parse(localStorage.getItem(STORAGE_CURRENT_USER));
+        if (cu) state.currentUser = cu;
+      } catch (e) {
+        console.error('Error loading state:', e);
+      }
+      applySettingsToDOM();
+      refreshAuthUI();
+      renderProjects();
+    }
+
+    function setupEventListeners() {
+      // Navigation
+      $('#menu-btn').addEventListener('click', () => nav.classList.toggle('active'));
+      nav.addEventListener('click', e => {
+        const a = e.target.closest('a[data-view]'); if (!a) return;
+        e.preventDefault();
+        switchView(a.dataset.view);
+        $$('#sidenav a').forEach(el => el.classList.toggle('active', el === a));
+        nav.classList.remove('active');
+      });
+
+      // Chat
+      $('#chat-form').addEventListener('submit', handleChatSubmit);
+
+      // Projects
+      $('#btn-create').addEventListener('click', createProject);
+      $('#btn-clear-form').addEventListener('click', clearProjectForm);
+      $('#btn-new-project').addEventListener('click', () => { switchView('projects'); window.scrollTo(0, 0); });
+      $('#projects-list').addEventListener('click', handleProjectActions);
+      $('#btn-clear-all').addEventListener('click', clearAllProjects);
+
+      // Settings
+      $('#set-dark').addEventListener('change', toggleDarkMode);
+      $('#set-lang').addEventListener('change', changeLanguage);
+      $('#set-font').addEventListener('change', changeFontSize);
+      $$('.color-dot').forEach(el => {
+        el.addEventListener('click', () => changePrimaryColor(el.dataset.color));
+      });
+      $('#btn-go-signup').addEventListener('click', () => { switchView('signup'); });
+      $('#btn-reset-settings').addEventListener('click', resetSettings);
+      $('#btn-reset-users').addEventListener('click', resetUsers);
+
+      // Auth
+      $('#btn-logout').addEventListener('click', logout);
+      $('#to-login').addEventListener('click', () => {
+        $('#signup-card').style.display = 'none';
+        $('#login-card').style.display = 'block';
+      });
+      $('#to-register').addEventListener('click', () => {
+        $('#login-card').style.display = 'none';
+        $('#signup-card').style.display = 'block';
+      });
+      $('#btn-register').addEventListener('click', register);
+      $('#btn-login').addEventListener('click', login);
+    }
+
+    // Chat Functions
+    async function handleChatSubmit(e) {
+      e.preventDefault();
+      const text = $('#user-input').value.trim();
+      if (!text) return;
+
+      // Display user message
+      displayMessage(text, 'user');
+      $('#user-input').value = '';
+      
+      // Show typing indicator
+      const typing = showTyping();
+      const btn = $('#chat-form button');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+      try {
+        // Send to API
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: text })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data || data.status !== "success" || !data.text) {
+          throw new Error("Invalid API response");
+        }
+
+        // Display bot response
+        displayMessage(data.text, 'bot');
+        
+      } catch (error) {
+        console.error('API Error:', error);
+        const errorMsg = error.message.includes('Failed to fetch') 
+          ? "تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت"
+          : "حدث خطأ في معالجة طلبك";
+        displayMessage(errorMsg, 'bot');
+      } finally {
+        typing.remove();
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+      }
+    }
+
+    function displayMessage(text, sender) {
+      const msg = document.createElement('div');
+      msg.className = `message ${sender}`;
+      msg.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
+      $('#chat-content').appendChild(msg);
+      $('#chat-content').scrollTop = $('#chat-content').scrollHeight;
+    }
+
+    function showTyping() {
+      const wrap = document.createElement('div');
+      wrap.className = 'message bot';
+      wrap.innerHTML = `
+        <div class="typing">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      `;
+      $('#chat-content').appendChild(wrap);
+      $('#chat-content').scrollTop = $('#chat-content').scrollHeight;
+      return wrap;
+    }
+
+    // Projects Functions
+    function createProject() {
+      const name = $('#proj-name').value.trim();
+      const desc = $('#proj-desc').value.trim();
+      const tags = $('#proj-tags').value.split(',').map(s => s.trim()).filter(Boolean);
+      
+      if (!name) { 
+        alert('الرجاء إدخال اسم المشروع'); 
+        return; 
+      }
+
+      state.projects.push({ name, desc, tags, createdAt: Date.now() });
+      saveProjects(); 
+      renderProjects();
+      clearProjectForm();
+    }
+
+    function clearProjectForm() {
+      $('#proj-name').value = ''; 
+      $('#proj-desc').value = ''; 
+      $('#proj-tags').value = '';
+    }
+
+    function renderProjects() {
+      const root = $('#projects-list');
+      root.innerHTML = '';
+      
+      if (!state.projects.length) {
+        root.innerHTML = `<div class="muted">لا توجد مشاريع بعد. أضف مشروعك الأول 👇</div>`;
+        return;
+      }
+
+      state.projects.forEach((p, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card project-card';
+        card.innerHTML = `
+          <div class="section-title" style="margin:0 0 8px 0"><i class="fas fa-folder"></i> ${escapeHtml(p.name)}</div>
+          <div class="muted" style="margin-bottom:8px">${escapeHtml(p.desc || '')}</div>
+          <div>${(p.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
+          <div class="space"></div>
+          <div class="row">
+            <button class="btn" data-act="open" data-idx="${idx}"><i class="fas fa-play"></i> فتح</button>
+            <button class="btn secondary" data-act="edit" data-idx="${idx}"><i class="fas fa-pen"></i> تعديل</button>
+            <button class="btn danger" data-act="delete" data-idx="${idx}"><i class="fas fa-trash"></i> حذف</button>
+          </div>
+        `;
+        root.appendChild(card);
+      });
+    }
+
+    function handleProjectActions(e) {
+      const btn = e.target.closest('button[data-act]'); 
+      if (!btn) return;
+      
+      const idx = +btn.dataset.idx; 
+      const act = btn.dataset.act;
+      
+      if (Number.isNaN(idx) || !state.projects[idx]) return;
+      
+      const project = state.projects[idx];
+      
+      switch (act) {
+        case 'delete':
+          if (confirm('هل تريد حذف هذا المشروع؟')) {
+            state.projects.splice(idx, 1); 
+            saveProjects(); 
+            renderProjects();
+          }
+          break;
+          
+        case 'open':
+          alert('تم فتح المشروع: ' + project.name);
+          break;
+          
+        case 'edit':
+          const name = prompt('تعديل الاسم', project.name) ?? project.name;
+          const desc = prompt('تعديل الوصف', project.desc) ?? project.desc;
+          const tags = prompt('تعديل الوسوم (افصلها بفواصل)', (project.tags || []).join(', '));
+          
+          project.name = name.trim() || project.name;
+          project.desc = (desc || '').trim();
+          project.tags = (tags || '').split(',').map(s => s.trim()).filter(Boolean);
+          
+          saveProjects(); 
+          renderProjects();
+          break;
+      }
+    }
+
+    function clearAllProjects() {
+      if (!state.projects.length) return;
+      if (confirm('سيتم حذف كل المشاريع!')) { 
+        state.projects = []; 
+        saveProjects(); 
+        renderProjects(); 
+      }
+    }
+
+    // Settings Functions
+    function toggleDarkMode(e) {
+      state.settings.dark = e.target.checked;
+      applySettingsToDOM();
+      saveSettings();
+    }
+
+    function changeLanguage(e) {
+      state.settings.lang = e.target.value;
+      applySettingsToDOM();
+      saveSettings();
+    }
+
+    function changeFontSize(e) {
+      state.settings.fontSize = e.target.value;
+      applySettingsToDOM();
+      saveSettings();
+    }
+
+    function changePrimaryColor(color) {
+      state.settings.primary = color;
+      applySettingsToDOM();
+      saveSettings();
+    }
+
+    function resetSettings() {
+      if (confirm('إرجاع الإعدادات الافتراضية؟')) {
+        state.settings = { dark: false, primary: '#2563eb', lang: 'ar', fontSize: '16px' };
+        applySettingsToDOM(); 
+        saveSettings();
+      }
+    }
+
+    function resetUsers() {
+      if (confirm('سيتم تسجيل الخروج من الحساب الحالي!')) {
+        logout();
+      }
+    }
+
+    // Auth Functions
+    async function register() {
+      const name = $('#reg-name').value.trim();
+      const email = $('#reg-email').value.trim().toLowerCase();
+      const pass = $('#reg-pass').value.trim();
+      
+      if (!name || !email || !pass) { 
+        alert('أدخل كل البيانات'); 
+        return; 
+      }
+      
+      try {
+        const { user } = await auth.createUserWithEmailAndPassword(email, pass);
+        await db.collection('users').doc(user.uid).set({
+          name,
+          email,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        $('#reg-name').value = '';
+        $('#reg-email').value = '';
+        $('#reg-pass').value = '';
+        
+        alert('تم إنشاء الحساب بنجاح ✅');
+        $('#to-login').click();
+      } catch (error) {
+        console.error('Registration error:', error);
+        alert(error.message.includes('email-already-in-use') 
+          ? 'هذا البريد مستخدم بالفعل' 
+          : 'حدث خطأ أثناء التسجيل: ' + error.message);
+      }
+    }
+
+    async function login() {
+      const email = $('#log-email').value.trim().toLowerCase();
+      const pass = $('#log-pass').value.trim();
+      
+      try {
+        const { user } = await auth.signInWithEmailAndPassword(email, pass);
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        
+        state.currentUser = {
+          uid: user.uid,
+          name: userDoc.data().name,
+          email: user.email
+        };
+        
+        saveCurrentUser();
+        refreshAuthUI();
+        
+        $('#log-email').value = '';
+        $('#log-pass').value = '';
+        
+        alert('مرحباً ' + state.currentUser.name + ' 👋');
+        switchView('settings');
+      } catch (error) {
+        console.error('Login error:', error);
+        alert(error.message.includes('wrong-password') 
+          ? 'كلمة المرور غير صحيحة' 
+          : error.message.includes('user-not-found') 
+            ? 'لا يوجد حساب بهذا البريد' 
+            : 'حدث خطأ أثناء الدخول: ' + error.message);
+      }
+    }
+
+    async function logout() {
+      if (!state.currentUser) return;
+      if (confirm('تأكيد تسجيل الخروج؟')) {
+        try {
+          await auth.signOut();
+          state.currentUser = null; 
+          saveCurrentUser();
+          refreshAuthUI();
+          alert('تم تسجيل الخروج.');
+        } catch (error) {
+          console.error('Logout error:', error);
+          alert('حدث خطأ أثناء تسجيل الخروج');
+        }
+      }
+    }
+
+    function refreshAuthUI() {
+      const info = $('#account-info');
+      const logoutBtn = $('#btn-logout');
+      const pill = $('#user-pill');
+      const namePill = $('#user-name-pill');
+
+      if (state.currentUser) {
+        info.textContent = 'مستخدم مسجل: ' + state.currentUser.name + ' (' + state.currentUser.email + ')';
+        logoutBtn.classList.remove('hidden');
+        pill.style.display = 'flex';
+        namePill.textContent = state.currentUser.name;
+      } else {
+        info.textContent = 'لا يوجد مستخدم مسجّل دخول';
+        logoutBtn.classList.add('hidden');
+        pill.style.display = 'none';
+        namePill.textContent = '';
+      }
+      applySettingsToDOM();
+    }
+
+    // Utility Functions
+    function switchView(view) {
+      $$('.view').forEach(v => v.classList.remove('active'));
+      $('#view-' + view).classList.add('active');
+    }
+
+    function applySettingsToDOM() {
+      // Theme
+      body.classList.toggle('dark', state.settings.dark);
+      document.documentElement.style.setProperty('--primary', state.settings.primary);
+      document.documentElement.style.setProperty('--fs', state.settings.fontSize);
+
+      // Language
+      const isAR = state.settings.lang === 'ar';
+      document.documentElement.setAttribute('dir', isAR ? 'rtl' : 'ltr');
+      document.documentElement.setAttribute('lang', isAR ? 'ar' : 'en');
+
+      // Controls
+      $('#set-dark').checked = state.settings.dark;
+      $('#set-lang').value = state.settings.lang;
+      $('#set-font').value = state.settings.fontSize;
+
+      // Text
+      const brandDefault = isAR ? 'RPR ' : 'Smart Assistant';
+      const userName = state.currentUser?.name;
+      $('#brand-text').textContent = userName || brandDefault;
+      $('#user-input').placeholder = isAR ? 'اكتب رسالتك هنا...' : 'Type your message...';
+
+      // Theme icon
+      $('#theme-btn').innerHTML = state.settings.dark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    }
+    
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, m => 
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
+    }
+
+    // Storage Functions
+    function saveSettings() {
+      localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(state.settings));
+    }
+
+    function saveProjects() {
+      localStorage.setItem(STORAGE_PROJECTS, JSON.stringify(state.projects));
+    }
+
+    function saveCurrentUser() {
+      state.currentUser
+        ? localStorage.setItem(STORAGE_CURRENT_USER, JSON.stringify(state.currentUser))
+        : localStorage.removeItem(STORAGE_CURRENT_USER);
+    }
+  
+  </script>
+</body>
+</html>
