@@ -245,10 +245,12 @@
 <body>
 
   <!-- Top bar -->
+
+  <!-- Top bar -->
   <div class="top-bar">
     <div class="brand">
       <img class="logo" src="https://i.supaimg.com/08305e3d-4e47-4df2-841c-eb61662481ec.jpg" alt="logo"/>
-      <span id="brand-text"></span>
+      <span id="brand-text">RDR YO</span>
     </div>
     <div class="user-pill" id="user-pill" style="display:none">
       <i class="fas fa-user"></i> <span id="user-name-pill"></span>
@@ -1015,32 +1017,27 @@
     }
 
     function applySettingsToDOM() {
-      // Theme
-      body.classList.toggle('dark', state.settings.dark);
-      document.documentElement.style.setProperty('--primary', state.settings.primary);
-      document.documentElement.style.setProperty('--fs', state.settings.fontSize);
+  // Theme
+  body.classList.toggle('dark', state.settings.dark);
+  document.documentElement.style.setProperty('--primary', state.settings.primary);
+  document.documentElement.style.setProperty('--fs', state.settings.fontSize);
 
-      // Language
-      const isAR = state.settings.lang === 'ar';
-      document.documentElement.setAttribute('dir', isAR ? 'rtl' : 'ltr');
-      document.documentElement.setAttribute('lang', isAR ? 'ar' : 'en');
+  // Language
+  const isAR = state.settings.lang === 'ar';
+  document.documentElement.setAttribute('dir', isAR ? 'rtl' : 'ltr');
+  document.documentElement.setAttribute('lang', isAR ? 'ar' : 'en');
 
-      // Controls
-      $('#set-dark').checked = state.settings.dark;
-      $('#set-lang').value = state.settings.lang;
-      $('#set-font').value = state.settings.fontSize;
+  // Controls
+  $('#set-dark').checked = state.settings.dark;
+  $('#set-lang').value = state.settings.lang;
+  $('#set-font').value = state.settings.fontSize;
 
-      // Text
-      const brandDefault = isAR ? '' : 'Smart Assistant';
-      const userName = state.currentUser?.name;
-      $('#brand-text').textContent = userName || brandDefault;
-      $('#user-input').placeholder = isAR ? 'اكتب رسالتك هنا...' : 'Type your message...';
+  // إزالة تغيير النص في العلو
+  $('#user-input').placeholder = isAR ? 'اكتب رسالتك هنا...' : 'Type your message...';
 
-      // Theme icon
-      $('#theme-btn').innerHTML = state.settings.dark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-    }
-    
-
+  // Theme icon
+  $('#theme-btn').innerHTML = state.settings.dark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+}
     function escapeHtml(str) {
       return String(str || '').replace(/[&<>"']/g, m => 
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
