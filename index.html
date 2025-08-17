@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RDR YO</title>
+  <title>YUGO Ai</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet"/>
   <!-- Firebase SDK -->
@@ -44,11 +44,11 @@
       position:fixed;top:0;left:0;right:0;
       background:#fff;border-bottom:1px solid #eee;
       display:flex;align-items:center;justify-content:space-between;
-      padding:10px 14px;z-index:100;
+      padding:3px 10px;z-index:100;
       transition:background .3s,border-color .3s;
     }
     body.dark .top-bar{background:#1e293b;border-color:#334155}
-    .brand{display:flex;align-items:center;gap:10px;color:var(--primary);font-weight:700}
+    .brand{display:flex;align-items:center;gap:1px;color:black;font-weight:700}
     .logo{width:50px;height:50px;border-radius:8px}
     .user-pill{display:flex;align-items:center;gap:8px;background:var(--secondary);color:var(--primary);padding:6px 10px;border-radius:999px}
 
@@ -65,7 +65,7 @@
       padding:10px 12px;border-radius:10px;margin:6px 0;
       color:#333;text-decoration:none;font-weight:500;transition:.25s;
     }
-    body.dark nav a{color:#e2e8f0}
+    body.dark nav a{color:black}
     nav a:hover,nav a.active{background:var(--secondary);color:var(--primary)}
     .menu-btn,.theme-btn{
       background:transparent;border:none;cursor:pointer;font-size:1.2rem;color:inherit
@@ -391,7 +391,7 @@
         if (s) Object.assign(state.settings, s);
         const p = JSON.parse(localStorage.getItem(STORAGE_PROJECTS));
         if (p) state.projects = p;
-        
+        const cu = JSON.parse(localStorage.getItem(STORAGE_CURRENT_USER));
         if (cu) state.currentUser = cu;
       } catch (e) {
         console.error('Error loading state:', e);
@@ -432,6 +432,7 @@
       $('#btn-go-signup').addEventListener('click', () => { switchView('signup'); });
       $('#btn-reset-settings').addEventListener('click', resetSettings);
       $('#btn-reset-users').addEventListener('click', resetUsers);
+
       // Auth
       $('#btn-logout').addEventListener('click', logout);
       $('#to-login').addEventListener('click', () => {
@@ -651,67 +652,44 @@
     }
 
     function resetUsers() {
-  if (confirm('سيتم مسح كل المستخدمين وتسجيل الخروج!')) {
-    state.users = []; 
-    state.currentUser = null;
-    saveUsers(); 
-    saveCurrentUser();
-    refreshAuthUI(); 
-    applySettingsToDOM();
-    alert('تمت إعادة ضبط المستخدمين.');
-  }
-}
+      if (confirm('سيتم تسجيل الخروج من الحساب الحالي!')) {
+        logout();
+      }
+    }
 
     // Auth Functions
     async function register() {
-  const name = $('#reg-name').value.trim();
-  const email = $('#reg-email').value.trim().toLowerCase();
-  const pass = $('#reg-pass').value.trim();
-  
-  if (!name || !email || !pass) { 
-    alert('أدخل كل البيانات'); 
-    return; 
-  }
-  
-  try {
-    const btn = $('#btn-register');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    
-    const { user } = await auth.createUserWithEmailAndPassword(email, pass);
-    await db.collection('users').doc(user.uid).set({
-      name,
-      email,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    
-    $('#reg-name').value = '';
-    $('#reg-email').value = '';
-    $('#reg-pass').value = '';
-    
-    alert('تم إنشاء الحساب بنجاح ✅');
-    $('#signup-card').style.display = 'none';
-    $('#login-card').style.display = 'block';
-    $('#log-email').value = email;
-    $('#log-pass').focus();
-    
-  } catch (error) {
-    console.error('Registration error:', error);
-    let errorMsg = 'حدث خطأ أثناء التسجيل';
-    if (error.message.includes('email-already-in-use')) {
-      errorMsg = 'هذا البريد مستخدم بالفعل';
-    } else if (error.message.includes('weak-password')) {
-      errorMsg = 'كلمة المرور ضعيفة (يجب أن تكون 6 أحرف على الأقل)';
-    } else if (error.message.includes('invalid-email')) {
-      errorMsg = 'بريد إلكتروني غير صالح';
+      const name = $('#reg-name').value.trim();
+      const email = $('#reg-email').value.trim().toLowerCase();
+      const pass = $('#reg-pass').value.trim();
+      
+      if (!name || !email || !pass) { 
+        alert('أدخل كل البيانات'); 
+        return; 
+      }
+      
+      try {
+        const { user } = await auth.createUserWithEmailAndPassword(email, pass);
+        await db.collection('users').doc(user.uid).set({
+          name,
+          email,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        $('#reg-name').value = '';
+        $('#reg-email').value = '';
+        $('#reg-pass').value = '';
+        
+        alert('تم إنشاء الحساب بنجاح ✅');
+        $('#to-login').click();
+      } catch (error) {
+        console.error('Registration error:', error);
+        alert(error.message.includes('email-already-in-use') 
+          ? 'هذا البريد مستخدم بالفعل' 
+          : 'حدث خطأ أثناء التسجيل: ' + error.message);
+      }
     }
-    alert(errorMsg);
-  } finally {
-    const btn = $('#btn-register');
-    btn.disabled = false;
-    btn.innerHTML = 'إنشاء حساب';
-  }
-}
+
     async function login() {
       const email = $('#log-email').value.trim().toLowerCase();
       const pass = $('#log-pass').value.trim();
@@ -803,7 +781,7 @@
       $('#set-font').value = state.settings.fontSize;
 
       // Text
-      const brandDefault = isAR ? 'RPR ' : 'Smart Assistant';
+      const brandDefault = isAR ? 'LUGO Ai' : 'Smart Assistant';
       const userName = state.currentUser?.name;
       $('#brand-text').textContent = userName || brandDefault;
       $('#user-input').placeholder = isAR ? 'اكتب رسالتك هنا...' : 'Type your message...';
