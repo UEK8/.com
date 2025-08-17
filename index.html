@@ -39,6 +39,32 @@
       font-size:var(--fs);
     }
 
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-5px); }
+      40%, 80% { transform: translateX(5px); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    @keyframes shine {
+      0% { transform: rotate(30deg) translate(-30%, -30%); }
+      100% { transform: rotate(30deg) translate(30%, 30%); }
+    }
+
     /* Top bar */
     .top-bar{
       position:fixed;top:0;left:0;right:0;
@@ -46,10 +72,11 @@
       display:flex;align-items:center;justify-content:space-between;
       padding:10px 14px;z-index:100;
       transition:background .3s,border-color .3s;
+      animation: fadeIn 0.5s ease-out;
     }
     body.dark .top-bar{background:#1e293b;border-color:#334155}
     .brand{display:flex;align-items:center;gap:10px;color:var(--primary);font-weight:700}
-    .logo{width:50px;height:50px;border-radius:8px}
+    .logo{width:50px;height:50px;border-radius:8px; animation: pulse 2s infinite}
     .user-pill{display:flex;align-items:center;gap:8px;background:var(--secondary);color:var(--primary);padding:6px 10px;border-radius:999px}
 
     /* Side nav */
@@ -66,19 +93,21 @@
       color:#333;text-decoration:none;font-weight:500;transition:.25s;
     }
     body.dark nav a{color:#e2e8f0}
-    nav a:hover,nav a.active{background:var(--secondary);color:var(--primary)}
+    nav a:hover,nav a.active{background:var(--secondary);color:var(--primary); animation: pulse 0.5s}
     .menu-btn,.theme-btn{
-      background:transparent;border:none;cursor:pointer;font-size:1.2rem;color:inherit
+      background:transparent;border:none;cursor:pointer;font-size:1.2rem;color:inherit;
+      transition: transform 0.3s;
     }
+    .menu-btn:hover,.theme-btn:hover{transform: rotate(15deg)}
 
     /* Main / Views */
     .main{margin-top:60px;display:flex;min-height:calc(100vh - 60px)}
-    .view{display:none;flex:1}
+    .view{display:none;flex:1; animation: fadeIn 0.3s ease-out}
     .view.active{display:block}
     .container{padding:16px}
     .card{
       background:#fff;border:1px solid #eee;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);
-      transition:background .3s,border-color .3s
+      transition:background .3s,border-color .3s; animation: fadeIn 0.4s ease-out
     }
     body.dark .card{background:#0b1222;border-color:#1b2740}
     .section-title{font-weight:700;margin-bottom:12px}
@@ -92,16 +121,61 @@
     }
     body.dark input,body.dark textarea,body.dark select{background:#0b1222;border-color:#1b2740;color:#e2e8f0}
     textarea{min-height:90px;resize:vertical}
-    .btn{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:10px 12px;cursor:pointer}
+    .btn{
+      background:var(--primary);color:#fff;border:none;border-radius:10px;padding:10px 12px;cursor:pointer;
+      transition: all 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:hover{transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15)}
     .btn.secondary{background:#e5e7eb;color:#111}
     .btn.ghost{background:transparent;border:1px solid #e5e7eb;color:inherit}
     body.dark .btn.secondary{background:#334155;color:#e2e8f0}
     .btn.danger{background:#ef4444}
     .muted{opacity:.75}
 
+    /* New Button Styles */
+    .btn-gradient {
+      background: linear-gradient(45deg, var(--primary), #a855f7);
+      color: white !important;
+      border: none !important;
+    }
+    .btn-3d {
+      box-shadow: 0 4px 0 #1e40af, 0 6px 8px rgba(0,0,0,0.2);
+      transform: translateY(0);
+      transition: all 0.2s;
+    }
+    .btn-3d:active {
+      transform: translateY(4px);
+      box-shadow: 0 1px 0 #1e40af;
+    }
+    .btn-special {
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-special::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        to bottom right,
+        rgba(255,255,255,0.3),
+        rgba(255,255,255,0)
+      );
+      transform: rotate(30deg);
+      animation: shine 3s infinite;
+    }
+    .btn-float {
+      animation: float 3s ease-in-out infinite;
+    }
+    .btn-shake:hover {
+      animation: shake 0.5s;
+    }
+
     /* Chat */
     .chat-container{height:calc(100vh - 60px - 64px);padding:15px;overflow-y:auto}
-    .message{display:flex;margin:10px 0;align-items:flex-end}
+    .message{display:flex;margin:10px 0;align-items:flex-end; animation: fadeIn 0.3s ease-out}
     .message.user{justify-content:flex-start}
     .message.bot{justify-content:flex-end}
     .bubble{
@@ -133,8 +207,36 @@
 
     /* Settings */
     .toggle{display:flex;align-items:center;gap:8px}
-    .color-dot{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.1);cursor:pointer}
+    .color-dot{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.1);cursor:pointer; transition: transform 0.3s}
+    .color-dot:hover{transform: scale(1.2)}
     .row.cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+
+    /* Progress Bar */
+    .progress-bar {
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      width: 0;
+      transition: width 0.5s ease;
+      border-radius: 3px;
+    }
+
+    /* Icons */
+    .icon-spin {
+      animation: spin 2s linear infinite;
+    }
+    .icon-pulse {
+      animation: pulse 1.5s infinite;
+    }
+    .icon-float {
+      animation: float 3s ease-in-out infinite;
+    }
 
     .space{height:8px}
     .hidden{display:none}
@@ -181,7 +283,7 @@
         <div class="input-wrap">
           <input type="text" id="user-input" placeholder="اكتب رسالتك هنا..." autocomplete="off">
         </div>
-        <button type="submit" class="btn"><i class="fas fa-paper-plane"></i></button>
+        <button type="submit" class="btn btn-gradient"><i class="fas fa-paper-plane"></i></button>
       </form>
     </section>
 
@@ -207,8 +309,8 @@
           </div>
           <div class="space"></div>
           <div class="row">
-            <button class="btn" id="btn-create">إنشاء</button>
-            <button class="btn secondary" id="btn-clear-form" type="button">مسح الحقول</button>
+            <button class="btn btn-3d" id="btn-create"><i class="fas fa-plus"></i> إنشاء</button>
+            <button class="btn secondary btn-shake" id="btn-clear-form" type="button"><i class="fas fa-broom"></i> مسح الحقول</button>
           </div>
         </div>
 
@@ -227,6 +329,23 @@
     <!-- Settings View -->
     <section id="view-settings" class="view">
       <div class="container">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-chart-bar icon-float"></i> الإحصائيات</div>
+          <div class="row" style="gap: 12px;">
+            <div class="card" style="flex: 1; text-align: center;">
+              <div style="font-size: 2rem; color: var(--primary);">0</div>
+              <div>المشاريع</div>
+            </div>
+            <div class="card" style="flex: 1; text-align: center;">
+              <div style="font-size: 2rem; color: #22c55e;">00:00</div>
+              <div>الوقت الحالي</div>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 0%"></div>
+          </div>
+        </div>
+
         <div class="card">
           <div class="section-title"><i class="fas fa-sliders"></i> المظهر</div>
           <div class="row">
@@ -256,6 +375,7 @@
                 <option value="14px">صغير</option>
                 <option value="16px" selected>عادي</option>
                 <option value="18px">كبير</option>
+                <option value="20px">كبير جداً</option>
               </select>
             </div>
           </div>
@@ -269,8 +389,21 @@
               <select id="set-lang">
                 <option value="ar" selected>العربية</option>
                 <option value="en">English</option>
+                <option value="fr">Français</option>
               </select>
             </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><i class="fas fa-icons icon-spin"></i> مكتبة الأيقونات</div>
+          <div class="row cols-3" style="gap: 8px; margin-top: 12px;">
+            <button class="btn"><i class="fas fa-rocket"></i> إطلاق</button>
+            <button class="btn btn-gradient"><i class="fas fa-magic"></i> سحر</button>
+            <button class="btn btn-3d"><i class="fas fa-gamepad"></i> لعبة</button>
+            <button class="btn btn-special"><i class="fas fa-star icon-spin"></i> مميز</button>
+            <button class="btn btn-float"><i class="fas fa-cloud"></i> سحابة</button>
+            <button class="btn"><i class="fas fa-robot"></i> روبوت</button>
           </div>
         </div>
 
@@ -281,9 +414,6 @@
           <div class="row">
             <button class="btn secondary" id="btn-go-signup" type="button"><i class="fas fa-user-plus"></i> إلى صفحة Sign-up</button>
             <button class="btn danger hidden" id="btn-logout" type="button"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
-            <footer style="text-align:center;padding:10px;font-size:12px;opacity:0.7;">
-  Developer: Mostapha Hachmi
-</footer>
           </div>
         </div>
 
@@ -301,18 +431,18 @@
     <section id="view-signup" class="view">
       <div class="container">
         <div class="card" id="signup-card">
-          <div class="section-title">📝 إنشاء حساب</div>
+          <div class="section-title"><i class="fas fa-user-plus icon-pulse"></i> إنشاء حساب</div>
           <input type="text" id="reg-name" placeholder="الاسم الكامل"><br><br>
           <input type="email" id="reg-email" placeholder="البريد الإلكتروني"><br><br>
           <input type="password" id="reg-pass" placeholder="كلمة المرور"><br><br>
-          <button class="btn" id="btn-register">إنشاء حساب</button>
+          <button class="btn btn-gradient btn-3d" id="btn-register"><i class="fas fa-user-plus"></i> إنشاء حساب</button>
           <div class="link" id="to-login" style="margin-top:10px;color:var(--primary);cursor:pointer">لدي حساب؟ تسجيل دخول</div>
         </div>
         <div class="card" id="login-card" style="display:none">
-          <div class="section-title">🔑 تسجيل الدخول</div>
+          <div class="section-title"><i class="fas fa-sign-in-alt icon-pulse"></i> تسجيل الدخول</div>
           <input type="email" id="log-email" placeholder="البريد الإلكتروني"><br><br>
           <input type="password" id="log-pass" placeholder="كلمة المرور"><br><br>
-          <button class="btn" id="btn-login">دخول</button>
+          <button class="btn btn-gradient" id="btn-login"><i class="fas fa-sign-in-alt"></i> دخول</button>
           <div class="link" id="to-register" style="margin-top:10px;color:var(--primary);cursor:pointer">لا أملك حساب؟ إنشاء حساب</div>
         </div>
       </div>
@@ -363,6 +493,8 @@
     window.addEventListener('DOMContentLoaded', () => {
       loadState();
       setupEventListeners();
+      updateClock();
+      setInterval(updateClock, 60000);
       
       // Listen for auth state changes
       auth.onAuthStateChanged(async (user) => {
@@ -385,6 +517,13 @@
       });
     });
 
+    function updateClock() {
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const timeElement = $('#view-settings .card:nth-child(1) .card:nth-child(2) div:first-child');
+      if (timeElement) timeElement.textContent = timeStr;
+    }
+
     function loadState() {
       try {
         const s = JSON.parse(localStorage.getItem(STORAGE_SETTINGS));
@@ -399,17 +538,25 @@
       applySettingsToDOM();
       refreshAuthUI();
       renderProjects();
+      loadAdditionalIcons();
     }
 
     function setupEventListeners() {
       // Navigation
-      $('#menu-btn').addEventListener('click', () => nav.classList.toggle('active'));
+      $('#menu-btn').addEventListener('click', () => {
+        nav.classList.toggle('active');
+        $('#menu-btn i').classList.toggle('fa-bars');
+        $('#menu-btn i').classList.toggle('fa-times');
+      });
+      
       nav.addEventListener('click', e => {
         const a = e.target.closest('a[data-view]'); if (!a) return;
         e.preventDefault();
         switchView(a.dataset.view);
         $$('#sidenav a').forEach(el => el.classList.toggle('active', el === a));
         nav.classList.remove('active');
+        $('#menu-btn i').classList.add('fa-bars');
+        $('#menu-btn i').classList.remove('fa-times');
       });
 
       // Chat
@@ -445,6 +592,36 @@
       });
       $('#btn-register').addEventListener('click', register);
       $('#btn-login').addEventListener('click', login);
+    }
+
+    function loadAdditionalIcons() {
+      const iconCategories = [
+        { title: "التعليم", icons: ["graduation-cap", "book", "pencil-alt"] },
+        { title: "التقنية", icons: ["laptop-code", "microchip", "server"] },
+        { title: "الألعاب", icons: ["gamepad", "dice", "chess"] },
+        { title: "الاجتماعية", icons: ["users", "comments", "thumbs-up"] },
+        { title: "التسوق", icons: ["shopping-cart", "tags", "store"] }
+      ];
+      
+      const iconsContainer = document.createElement('div');
+      iconsContainer.className = 'card';
+      iconsContainer.innerHTML = `
+        <div class="section-title"><i class="fas fa-icons"></i> مكتبة الأيقونات الموسعة</div>
+        ${iconCategories.map(cat => `
+          <div style="margin: 16px 0 8px 0; font-weight: 500">
+            <i class="fas fa-folder"></i> ${cat.title}
+          </div>
+          <div class="row" style="gap: 8px; margin-bottom: 12px;">
+            ${cat.icons.map(icon => `
+              <button class="btn" style="flex: none; padding: 8px 12px">
+                <i class="fas fa-${icon}"></i>
+              </button>
+            `).join('')}
+          </div>
+        `).join('')}
+      `;
+      
+      $('#view-settings .container').appendChild(iconsContainer);
     }
 
     // Chat Functions
@@ -531,16 +708,54 @@
         return; 
       }
 
-      state.projects.push({ name, desc, tags, createdAt: Date.now() });
-      saveProjects(); 
-      renderProjects();
+      const newProject = { 
+        name, 
+        desc, 
+        tags, 
+        createdAt: Date.now(),
+        id: 'proj-' + Math.random().toString(36).substr(2, 9)
+      };
+      
+      state.projects.push(newProject);
+      saveProjects();
+      
+      // Update stats
+      updateStats();
+      
+      // Render with animation
+      renderProjects(); 
       clearProjectForm();
+      
+      // Animation effect
+      const cards = $$('.project-card');
+      const lastCard = cards[cards.length - 1];
+      lastCard.style.animation = 'fadeIn 0.5s ease-out';
+      
+      // Button effect
+      const btn = $('#btn-create');
+      btn.innerHTML = '<i class="fas fa-check"></i> تم الإنشاء!';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-plus"></i> إنشاء';
+      }, 2000);
+    }
+
+    function updateStats() {
+      const projectsCount = $('#view-settings .card:nth-child(1) .card:first-child div:first-child');
+      const progressFill = $('.progress-fill');
+      
+      if (projectsCount) projectsCount.textContent = state.projects.length;
+      if (progressFill) progressFill.style.width = `${Math.min(state.projects.length * 10, 100)}%`;
     }
 
     function clearProjectForm() {
       $('#proj-name').value = ''; 
       $('#proj-desc').value = ''; 
       $('#proj-tags').value = '';
+      
+      // Add shake animation to clear button
+      const btn = $('#btn-clear-form');
+      btn.classList.add('btn-shake');
+      setTimeout(() => btn.classList.remove('btn-shake'), 500);
     }
 
     function renderProjects() {
@@ -587,6 +802,7 @@
             state.projects.splice(idx, 1); 
             saveProjects(); 
             renderProjects();
+            updateStats();
           }
           break;
           
@@ -615,6 +831,7 @@
         state.projects = []; 
         saveProjects(); 
         renderProjects(); 
+        updateStats();
       }
     }
 
@@ -641,6 +858,11 @@
       state.settings.primary = color;
       applySettingsToDOM();
       saveSettings();
+      
+      // Add animation to selected color dot
+      $$('.color-dot').forEach(dot => {
+        dot.style.transform = dot.dataset.color === color ? 'scale(1.2)' : 'scale(1)';
+      });
     }
 
     function resetSettings() {
@@ -668,6 +890,10 @@
         return; 
       }
       
+      const btn = $('#btn-register');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإنشاء...';
+      
       try {
         const { user } = await auth.createUserWithEmailAndPassword(email, pass);
         await db.collection('users').doc(user.uid).set({
@@ -680,10 +906,20 @@
         $('#reg-email').value = '';
         $('#reg-pass').value = '';
         
+        // Success animation
+        btn.innerHTML = '<i class="fas fa-check"></i> تم!';
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء حساب';
+          btn.disabled = false;
+        }, 1500);
+        
         alert('تم إنشاء الحساب بنجاح ✅');
         $('#to-login').click();
       } catch (error) {
         console.error('Registration error:', error);
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء حساب';
+        btn.disabled = false;
+        
         alert(error.message.includes('email-already-in-use') 
           ? 'هذا البريد مستخدم بالفعل' 
           : 'حدث خطأ أثناء التسجيل: ' + error.message);
@@ -693,6 +929,10 @@
     async function login() {
       const email = $('#log-email').value.trim().toLowerCase();
       const pass = $('#log-pass').value.trim();
+      
+      const btn = $('#btn-login');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الدخول...';
       
       try {
         const { user } = await auth.signInWithEmailAndPassword(email, pass);
@@ -710,10 +950,20 @@
         $('#log-email').value = '';
         $('#log-pass').value = '';
         
+        // Success animation
+        btn.innerHTML = '<i class="fas fa-check"></i> تم!';
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> دخول';
+          btn.disabled = false;
+        }, 1500);
+        
         alert('مرحباً ' + state.currentUser.name + ' 👋');
         switchView('settings');
       } catch (error) {
         console.error('Login error:', error);
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> دخول';
+        btn.disabled = false;
+        
         alert(error.message.includes('wrong-password') 
           ? 'كلمة المرور غير صحيحة' 
           : error.message.includes('user-not-found') 
